@@ -1,3 +1,4 @@
+from http import client
 import discord
 from discord.ext import commands
 from requests import get
@@ -9,33 +10,35 @@ bot = discord.Bot()
 async def on_ready():
     print("just save me".format(bot))
 
-
-
-
     # Stats
 
-
-
 @bot.slash_command(guild_ids=[871168657382838292, 827650989070090340, 908816464784552026, 964167989916213318, 880890047962955809])
-async def stats(ctx):
+async def stats(ctx, self):
     """This displays the election results"""
+    count = str(len(bot.guilds))
     stats_embed = discord.Embed(
         description=f"This is where we show our quaterly income from scamming 60 year olds into voting for Boris (See: Granny Farming)",
         colour=0xfff673
         )
     stats_embed.add_field(name="creator", value="soren#8898", inline=True)
     stats_embed.add_field(name="commands", value="at *least* 7", inline=True)
-    stats_embed.set_footer(text="This is in Early Access, and will be released to the public soon", icon_url="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/160/twitter/53/flushed-face_1f633.png")
+    stats_embed.add_field(name="servers in", value=str(count))
+    stats_embed.set_footer(text="This is v1.0! Find the code at https://github.com/soren-stuff/get-brexit-done-bot", icon_url="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/160/twitter/53/flushed-face_1f633.png")
     await ctx.respond(embed=stats_embed)
 
 @bot.slash_command(guild_ids=[871168657382838292, 827650989070090340, 908816464784552026, 964167989916213318, 880890047962955809])
 async def about(ctx):
     """Tells you about the bot"""
     about_embed = discord.Embed(
-        description=f"This bot is GBD Bot. It was created during the times when Boris was bad at being a prime minister. It was finished at the time when Boris was REALLY bad at being a prime minister. Hence why it came out so quickly."
+        description=f"We needed to get brexit done.\nWith this bot, we can do so.",
+        title="GBD Bot"
     )
-    about_embed.set_footer(text="God I f#!&ing hate boris.", icon_url="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/160/twitter/53/flushed-face_1f633.png")
-    ctx.respond(embed=about_embed)
+    about_embed.set_footer(text="Support server: https://discord.gg/tKGCnmBUvH", icon_url="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/160/twitter/53/flushed-face_1f633.png")
+    about_embed.set_image(url="https://media.discordapp.net/attachments/789850729124462592/967406768592400384/unknown.png?width=896&height=910")
+    await ctx.respond(embed=about_embed)
+
+
+
 
 # Moderation Commands
 
@@ -43,31 +46,41 @@ async def about(ctx):
 
 @bot.slash_command(guild_ids=[871168657382838292, 827650989070090340, 908816464784552026, 964167989916213318, 880890047962955809])
 @commands.has_permissions(ban_members = True)
-async def outcasting(ctx, thelibdem : discord.Member, reason : str):
-    """Have someone leave the Conservatives"""
-    if thelibdem == ctx.author:
+async def outcasting(ctx, libdem : discord.Member, reason : str):
+    """Have someone leave the Conservatives (Ban)"""
+    if libdem == ctx.author:
         await ctx.respond("Why would we ban a follower?")
         return
-    elif thelibdem.id == 871399607542882365:
+    elif libdem.id == 871399607542882365:
         await ctx.respond("You shan't ban your one true Leader!")
         return
-    elif thelibdem.guild_permissions.administrator:
+    elif libdem.guild_permissions.administrator:
             await ctx.respond("Sorry, I can't ban an MP. Otherwise John Bercow would shout at us lot")
             return
     else:
         ban_embed = discord.Embed(
             title="The Lib Dem has been Banned!",
-            description=f"{thelibdem.mention} has been removed from this Holy Land of the Conservatives by {ctx.author.mention} because {reason}"
+            description=f"{libdem.mention} has been removed from this Holy Land of the Conservatives by {ctx.author.mention} because {reason}"
         )
         await ctx.respond(embed=ban_embed)
-        await thelibdem.ban(reason = reason)
+        await libdem.ban(reason = reason)
 
-#https://www.independent.ie/world-news/and-finally/7f4ed/29792437.ece/AUTOCROP/w620/PANews_409f1f70-4db0-4ac2-a352-1b81ca564387_I1.jpg
+@bot.slash_command(guild_ids=[871168657382838292, 827650989070090340, 908816464784552026, 964167989916213318, 880890047962955809])
+@commands.has_permissions(ban_members = True)
+async def initiation(ctx, newconservative : discord.Member):
+    """Allow someone to join back the Conservatives (Unban)"""
+    unbanEmbed = discord.Embed(
+        description=f"{newconservative.mention} has been brought back into the conservative party!",
+        title="Member unbanned!") 
+    await ctx.respond(embed=unbanEmbed)
+    await ctx.guild.unban(newconservative)
+    
+
 
 @bot.slash_command(guild_ids=[871168657382838292, 827650989070090340, 908816464784552026, 964167989916213318, 880890047962955809])
 @commands.has_permissions(manage_messages=True)
 async def silencing(ctx, labourvoter : discord.Member, reason : str):
-    """Silence a Labour voter"""
+    """Silence a Labour voter (Mute)"""
     if labourvoter == ctx.author:
         await ctx.respond("You vote Lib Dem??? Lies!")
         return
@@ -99,7 +112,7 @@ async def silencing(ctx, labourvoter : discord.Member, reason : str):
 @bot.slash_command(guild_ids=[871168657382838292, 827650989070090340, 908816464784552026, 964167989916213318, 880890047962955809])
 @commands.has_permissions(manage_messages=True)
 async def unsilence(ctx, victim : discord.Member):
-    """Unmute someone for correcting their ways"""
+    """Let someone speak for changing their ways (Unmute)"""
     role = discord.utils.get(ctx.guild.roles, name="Muted")
     if role in victim.roles:
         unmute_embed = discord.Embed(
@@ -112,28 +125,34 @@ async def unsilence(ctx, victim : discord.Member):
     else:
         await ctx.respond("This person has not voted UKIP, therefore they are free already")
 
+
+
+
+
+
+
+
+
+
+
 # Fun
 
 @bot.slash_command(guild_ids=[871168657382838292, 827650989070090340, 908816464784552026, 964167989916213318, 880890047962955809])
 async def borisimage(ctx):
     """Send an image that includes our God (Probably)"""
-    randImageNum = random.randint(1,8)
+    randImageNum = random.randint(1,6)
     match randImageNum:
         case 1:
-            await ctx.respond("Here is a selfie of British Bercow I took!", file=discord.File("RandImage\Bercow.png"))
-        case 2:
-            await ctx.respond("Now this is a selfie of French Bercow I took. I call him 'Bercoui'", file=discord.File("RandImage\Bercoui.png"))
-        case 3:
             await ctx.respond("This is a selfie I took when I became PM", file=discord.File("RandImage\clown.png"))
-        case 4:
+        case 2:
             await ctx.respond("Inspirational quote by yours truly", file=discord.File("RandImage\geezerboris.png"))
-        case 5:
+        case 3:
             await ctx.respond("Me and my pal Trump made a good deal on this day. You can tell because I'm smiling", file=discord.File("RandImage\goodDeal.png"))
-        case 6:
+        case 4:
             await ctx.respond("I think I should get an anime, I'm quite 'kawaii' in this picture, as the new conservatives say", file=discord.File("RandImage\kawaiiBoris.png"))
-        case 7:
-            await ctx.respond("Here's a picture of me and all my friends in lockdown", file=discord.File("RandImage\party.png"))
-        case 8:
+        case 5:
+            await ctx.respond("Me and all my friends in lockdown", file=discord.File("RandImage\party.png"))
+        case 6:
             await ctx.respond("Me and the lads were preparing for the 2019 General election", file=discord.File("RandImage\TheGang.png"))
         case _:
             await ctx.respond("Something broke with the command. Best practice is not to try again!")
