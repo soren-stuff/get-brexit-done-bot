@@ -160,5 +160,5 @@ async def ukip_irl(ctx, ukipmember : discord.Member):
     ukipirl_embed.set_image(url=f"https://some-random-api.ml/canvas/jail?avatar={ukipmember.avatar}")
     await ctx.respond(embed=ukipirl_embed)
 
-bot.run("ODcxMzk5NjA3NTQyODgyMzY1.YQawIA.sqd_RnMkxAXsC4QIsZSiAB9sAfk")
+bot.run("Uh oh! Token go no brr.")
 
